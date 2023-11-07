@@ -1008,7 +1008,7 @@ class JBT_TextEditWindow(QMainWindow):
         """)
         self.title_font_button.setText("Title Font")
         self.title_font_button.setToolTip("Title font")
-        self.title_font_button.clicked.connect(self.changeTitleFont)
+        self.title_font_button.clicked.connect(self.titleFontButtonClicked)
         title_font_button_proxy = self.menu_scene.addWidget(self.title_font_button)
         title_font_button_proxy.setPos(1143, 12)
 
@@ -1026,7 +1026,7 @@ class JBT_TextEditWindow(QMainWindow):
         """)
         self.title_font_color_button.setText("Tt")
         self.title_font_color_button.setToolTip("Title color")
-        self.title_font_color_button.clicked.connect(self.changeTitleFontColor)
+        self.title_font_color_button.clicked.connect(self.titleFontColorButtonClicked)
         title_font_color_button_proxy = self.menu_scene.addWidget(self.title_font_color_button)
         title_font_color_button_proxy.setPos(1078, 12)
 
@@ -1062,9 +1062,56 @@ class JBT_TextEditWindow(QMainWindow):
 
     # Slot to change the title font color
     @Slot()
-    def changeTitleFontColor(self):
+    def titleFontColorButtonClicked(self):
+        cd = QColorDialog()
+        cd.setStyleSheet("""
+            QDialog{
+                background-color: #FFF8EA;
+            }
+
+            QPushButton{
+                background-color: #594545;
+                color: #FFFFFF;
+            }
+            QPushButton:hover{
+                background-color: #AD8666;
+                color: #FFFFFF;
+            }
+
+            QSpinBox{
+                width: 33px;
+                height: 33px;
+                }
+            QSpinBox::up-arrow{
+                 image: url(Images/up-arrow.png);
+             }
+            QSpinBox::up-arrow:hover{
+                 image: url(Images/up-arrow-hovered.png);
+             }
+            QSpinBox::down-arrow{
+                 image: url(Images/down-arrow.png);
+            }
+            QSpinBox::down-arrow:hover{
+                 image: url(Images/down-arrow-hovered.png);
+                }
+            QSpinBox::up-button{
+                width: 15px;
+                height: 15px;
+            }
+            QSpinBox::down-button{
+                width: 15px;
+                height: 15px;
+            }
+        """)
+        cd.setWindowTitle("Pick a color")
+        cd.setWindowIcon(QPixmap("Images/Logo.png"))
+        cd.colorSelected.connect(self.changeTitleFontColor)
+        cd.exec()
+
+
+    def changeTitleFontColor(self, color):
         # Change the color of the title
-        color = QColorDialog.getColor(self.title_color.name(), self, "Title Font Color")
+        # color = QColorDialog.getColor(self.title_color.name(), self, "Title Font Color")
         stylesheet = "background-color: #FFFFFF; color: " + color.name() + ""
         self.ui.lineEdit.setStyleSheet(stylesheet);
         self.title_color = color
@@ -1088,16 +1135,83 @@ class JBT_TextEditWindow(QMainWindow):
 
     # Slot to change the title font
     @Slot()
-    def changeTitleFont(self):
+    def titleFontButtonClicked(self):
+        fd = QFontDialog()
+        fd.setWindowTitle("Pick a font")
+        fd.setWindowIcon(QPixmap("Images/Logo.png"))
+        fd.setCurrentFont(self.ui.lineEdit.font())
+        fd.setStyleSheet("""
+        QDialog{
+            background-color: #FFF8EA;
+        }
+
+        QPushButton{
+            background-color: #594545;
+            color: #FFFFFF;
+        }
+        QPushButton:hover{
+            background-color: #AD8666;
+            color: #FFFFFF;
+        }
+
+        QSpinBox{
+            width: 33px;
+            height: 33px;
+            }
+        QSpinBox::up-arrow{
+             image: url(Images/up-arrow.png);
+         }
+        QSpinBox::up-arrow:hover{
+             image: url(Images/up-arrow-hovered.png);
+         }
+        QSpinBox::down-arrow{
+             image: url(Images/down-arrow.png);
+        }
+        QSpinBox::down-arrow:hover{
+             image: url(Images/down-arrow-hovered.png);
+            }
+        QSpinBox::up-button{
+            width: 15px;
+            height: 15px;
+        }
+        QSpinBox::down-button{
+            width: 15px;
+            height: 15px;
+         }
+
+         QComboBox{
+             width: 80px;
+             height: 30px;
+             border-color: #FFFFFF;
+         }
+         QComboBox::drop-down{
+             background-color: #FFFFFF;
+         }
+         QComboBox::down-arrow{
+             image: url(Images/down-arrow.png);
+             width: 10px;
+             height: 10px;
+         }
+         QComboBox::down-arrow:hover{
+             image: url(Images/down-arrow-hovered.png);
+             width: 10px;
+             height: 10px;
+         }
+        """)
+        fd.fontSelected.connect(self.changeTitleFont)
+        fd.exec()
+
+
+    @Slot()
+    def changeTitleFont(self, font):
         # Change the font of the title
-        font = QFontDialog.getFont(self.ui.lineEdit.font(), self, "Choose Title Font")
-        self.ui.lineEdit.setFont(font[1])
+        self.ui.lineEdit.setFont(font)
 
         date_time_font = self.ui.lineEdit_2.font()
-        if font[1].pointSizeF() > 10.0:
+        if font.pointSizeF() > 10.0:
             date_time_font.setPointSizeF(10.0)
         else:
-            date_time_font.setPointSizeF(font[1].pointSizeF())
+            date_time_font.setPointSizeF(font.pointSizeF())
         self.ui.lineEdit_2.setFont(date_time_font)
 
         # Change the font of the button text
@@ -1105,7 +1219,7 @@ class JBT_TextEditWindow(QMainWindow):
         width: 30;
         height: 30;
         font-weight: bold;
-        font-family: {font[1].family()};
+        font-family: {font.family()};
         background-color: #FFFFFF;
         border: 1px solid white;"""
         full_stylesheet = "QPushButton{" + b_stylesheet + "}\nQPushButton:hover{border: 2px solid #E8E8E8}"
@@ -1248,8 +1362,57 @@ class JBT_TextEditWindow(QMainWindow):
     # Slot to respond to the font color button being clicked
     @Slot()
     def fontColorButtonClicked(self):
+
+        cd = QColorDialog()
+        cd.setStyleSheet("""
+            QDialog{
+                background-color: #FFF8EA;
+            }
+
+            QPushButton{
+                background-color: #594545;
+                color: #FFFFFF;
+            }
+            QPushButton:hover{
+                background-color: #AD8666;
+                color: #FFFFFF;
+            }
+
+            QSpinBox{
+                width: 33px;
+                height: 33px;
+                }
+            QSpinBox::up-arrow{
+                 image: url(Images/up-arrow.png);
+             }
+            QSpinBox::up-arrow:hover{
+                 image: url(Images/up-arrow-hovered.png);
+             }
+            QSpinBox::down-arrow{
+                 image: url(Images/down-arrow.png);
+            }
+            QSpinBox::down-arrow:hover{
+                 image: url(Images/down-arrow-hovered.png);
+                }
+            QSpinBox::up-button{
+                width: 15px;
+                height: 15px;
+            }
+            QSpinBox::down-button{
+                width: 15px;
+                height: 15px;
+            }
+        """)
+        cd.setWindowTitle("Pick a color")
+        cd.setWindowIcon(QPixmap("Images/Logo.png"))
+        cd.colorSelected.connect(self.changeFontColor)
+        cd.exec()
+
+
+    @Slot()
+    def changeFontColor(self, color):
         # Change the color of the button text to the color chosen by the user
-        color = QColorDialog.getColor("#FFFFFF", self, "Font color")
+        # color = QColorDialog.getColor("#FFFFFF", self, "Font color")
         css = f"""
             color: {color.name()};
             width: 55;
@@ -1272,23 +1435,91 @@ class JBT_TextEditWindow(QMainWindow):
 
     # Slot to respond to the font family button being clicked
     def fontFamilyButtonClicked(self):
+        fd = QFontDialog()
+        fd.setWindowTitle("Pick a font")
+        fd.setWindowIcon(QPixmap("Images/Logo.png"))
+        fd.setCurrentFont(self.ui.textEdit.currentFont())
+        fd.setStyleSheet("""
+        QDialog{
+            background-color: #FFF8EA;
+        }
+
+        QPushButton{
+            background-color: #594545;
+            color: #FFFFFF;
+        }
+        QPushButton:hover{
+            background-color: #AD8666;
+            color: #FFFFFF;
+        }
+
+        QSpinBox{
+            width: 33px;
+            height: 33px;
+            }
+        QSpinBox::up-arrow{
+             image: url(Images/up-arrow.png);
+         }
+        QSpinBox::up-arrow:hover{
+             image: url(Images/up-arrow-hovered.png);
+         }
+        QSpinBox::down-arrow{
+             image: url(Images/down-arrow.png);
+        }
+        QSpinBox::down-arrow:hover{
+             image: url(Images/down-arrow-hovered.png);
+            }
+        QSpinBox::up-button{
+            width: 15px;
+            height: 15px;
+        }
+        QSpinBox::down-button{
+            width: 15px;
+            height: 15px;
+         }
+
+         QComboBox{
+             width: 80px;
+             height: 30px;
+             border-color: #FFFFFF;
+         }
+         QComboBox::drop-down{
+             background-color: #FFFFFF;
+         }
+         QComboBox::down-arrow{
+             image: url(Images/down-arrow.png);
+             width: 10px;
+             height: 10px;
+         }
+         QComboBox::down-arrow:hover{
+             image: url(Images/down-arrow-hovered.png);
+             width: 10px;
+             height: 10px;
+         }
+        """)
+        fd.fontSelected.connect(self.changeFontFamily)
+        fd.exec()
+
+
+    @Slot()
+    def changeFontFamily(self, font):
         # Change the name and font of the button text to the chosen font
-        font = QFontDialog.getFont(self.ui.textEdit.currentFont().toString(), self, "Choose Font")
+        #font = QFontDialog.getFont(self.ui.textEdit.currentFont().toString(), self, "Choose Font")
         css = f"""
             width: 130;
             height: 30;
             background-color: #FFFFFF;
             border: 1px solid white;
-            font-family: {font[1].family()};
+            font-family: {font.family()};
               """
         full_stylesheet = "QPushButton{" + css + "} \nQPushButton:hover{border: 2px solid #E8E8E8}"
         self.font_family_button.setStyleSheet(full_stylesheet)
-        self.font_family_button.setText(font[1].family())
+        self.font_family_button.setText(font.family())
 
         # Change the font of the text edit:
         prev_italic = self.ui.textEdit.fontItalic()
         prev_underline = self.ui.textEdit.fontUnderline()
-        self.ui.textEdit.setCurrentFont(font[1])
+        self.ui.textEdit.setCurrentFont(font)
         self.ui.textEdit.setFontItalic(prev_italic)
         self.ui.textEdit.setFontUnderline(prev_underline)
 
