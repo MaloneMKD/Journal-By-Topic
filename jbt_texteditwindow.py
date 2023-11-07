@@ -16,6 +16,7 @@
 # This Python file uses the following encoding: utf-8
 import sys
 import pickle
+from  cryptography.fernet import Fernet
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QTextEdit, QGraphicsScene, QButtonGroup,
@@ -1355,6 +1356,10 @@ class JBT_TextEditWindow(QMainWindow):
         date_stylesheet = self.ui.lineEdit_2.styleSheet()
         body_html = self.ui.textEdit.toHtml()
 
+        key = Fernet.generate_key()
+        f = Fernet(key)
+        data = f.encrypt(body_html.encode())
+
         data_dict = {
             "title": title,
             "title_stylesheet": title_stylesheet,
@@ -1362,7 +1367,8 @@ class JBT_TextEditWindow(QMainWindow):
             "date": date,
             "date_stylesheet": date_stylesheet,
             "last_modified": QDate.currentDate().toString("dddd - dd MMMM yyyy"),
-            "body_html": body_html
+            "fk": key,
+            "encrypted_body": data
         }
 
         with open(f"{self.save_path}/{title}.jbt", "wb") as save_file:
@@ -1465,7 +1471,13 @@ class JBT_TextEditWindow(QMainWindow):
         self.ui.lineEdit.setFont(font)
         self.ui.lineEdit_2.setText(self.load_data["date"])
         self.ui.lineEdit_2.setStyleSheet(self.load_data["date_stylesheet"])
-        self.ui.textEdit.setHtml(self.load_data["body_html"])
+
+        # Decrypt the text body
+        key = self.load_data["fk"]
+        f = Fernet(key)
+        token = self.load_data["encrypted_body"]
+        decrypted_body = f.decrypt(token)
+        self.ui.textEdit.setHtml(decrypted_body.decode())
 
         # Load data into variables
         stylesheet = self.load_data["title_stylesheet"]

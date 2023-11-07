@@ -84,6 +84,7 @@ class InputPasswordDialog(QMainWindow):
         self.password_line_edit.setFont(QFont("Corbel Light", 11))
         self.password_line_edit.setPlaceholderText("Enter the password")
         self.password_line_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        self.password_line_edit.returnPressed.connect(self.proceed_button_clicked)
         password_line_edit_proxy = self.scene.addWidget(self.password_line_edit)
         password_line_edit_proxy.setPos(110, 58 + sep_distance)
 
@@ -119,7 +120,6 @@ class InputPasswordDialog(QMainWindow):
     def proceed_button_clicked(self):
         password = self.password_line_edit.text()
         is_correct_password = bcrypt.checkpw(password.encode('utf-8'), self.topic_data["password"])
-        #is_correct_password = bcrypt.checkpw(password.encode('utf-8'), b'$2b$12$QxTJ4dOZUxW1ai/KnDIAoehHXTZbqHGODiQQ1CsJg60BNpA3QMaXu')
         if is_correct_password:
             self.authentication_successful.emit(self.topic_data["topic_name"])
             self.close()
