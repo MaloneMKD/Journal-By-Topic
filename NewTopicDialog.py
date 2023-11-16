@@ -45,8 +45,8 @@ class NewTopicDialog(QMainWindow):
         super(NewTopicDialog, self).__init__(parent, Qt.WindowType.Dialog)
 
         # Window configuration
-        self.setFixedSize(600, 500)
-        self.setGeometry(465, 170 , 600, 500)
+        self.setFixedSize(600, 600)
+        self.setGeometry(465, 170 , 600, 600)
         self.setWindowTitle("New Topic")
         self.setWindowIcon(QPixmap("Images/logo.png"))
 
@@ -62,10 +62,11 @@ class NewTopicDialog(QMainWindow):
         self.desc_text_edit = QTextEdit()
         self.locked_checkbox = QCheckBox()
         self.password_line_edit = QLineEdit()
+        self.passwordHint_TextEdit = QTextEdit()
 
         # Setup view and scene
         self.setCentralWidget(self.view)
-        self.scene.setSceneRect(QRectF(0, 0, 590, 498))
+        self.scene.setSceneRect(QRectF(0, 0, 590, 598))
         self.view.setScene(self.scene)
         self.view.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
 
@@ -143,15 +144,30 @@ class NewTopicDialog(QMainWindow):
         self.password_line_edit.setEnabled(False)
         password_line_edit_proxy = self.scene.addWidget(self.password_line_edit)
         password_line_edit_proxy.setPos(130, 292 + sep_distance * 3)
+
+        # Password hint
+        #self.scene.addRect(QRectF(2, 370 + sep_distance * 3, 586, 50))
+        passwordHint_label = self.scene.addText("Password Hint:", text_font)
+        passwordHint_label.setPos(4, 375 + sep_distance * 3)
+        passwordHint_label.setDefaultTextColor(Qt.GlobalColor.darkGray)
+
+        self.passwordHint_TextEdit.setFixedSize(455, 80)
+        self.passwordHint_TextEdit.setFrameShape(QFrame.Shape.NoFrame)
+        #self.passwordHint_lineEdit.setFrame(False)
+        self.passwordHint_TextEdit.setFont(QFont("Corbel Light", 11.0))
+        self.passwordHint_TextEdit.setPlaceholderText("Enter a hint for your password here...")
+        passwordHint_TextEdit_proxy = self.scene.addWidget(self.passwordHint_TextEdit)
+        passwordHint_TextEdit_proxy.setPos(130, 372 + sep_distance * 3)
+
             # Buttons
-        self.create_button.setPos(92.5, 430)
+        self.create_button.setPos(92.5, 530)
         self.create_button.set_button_color("#594545")
         self.create_button.set_highlight_color("#AD8666")
         self.create_button.set_text_color(Qt.GlobalColor.white)
         self.create_button.clicked.connect(self.prepare_data)
         self.scene.addItem(self.create_button)
 
-        self.cancel_button.setPos(347.5, 430)
+        self.cancel_button.setPos(347.5, 530)
         self.cancel_button.set_button_color("#594545")
         self.cancel_button.set_highlight_color("#AD8666")
         self.cancel_button.set_text_color(Qt.GlobalColor.white)
@@ -180,7 +196,8 @@ class NewTopicDialog(QMainWindow):
         "topic_name": self.topic_name_line_edit.text(),
         "topic_description": self.desc_text_edit.toPlainText(),
         "locked": self.locked_checkbox.isChecked(),
-        "password": self.hashPassword(self.password_line_edit.text())
+        "-p&": self.hashPassword(self.password_line_edit.text()), #Password
+        "-pH&": self.passwordHint_TextEdit.toPlainText() #Password hint
         }
         self.data_ready.emit(data)
         self.close()

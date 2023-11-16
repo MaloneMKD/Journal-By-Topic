@@ -20,9 +20,9 @@ import bcrypt
 
 from PySide6.QtWidgets import (
 QApplication, QMainWindow, QGraphicsItem, QProgressBar, QGraphicsScene)
-from PySide6.QtGui import QPen, QPixmap, QColor, QFont
+from PySide6.QtGui import QPen, QPixmap, QColor, QFont, QBrush, QLinearGradient
 from PySide6.QtCore import (
-QRectF, QLineF, QDateTime, QTimer, Slot, QDir, QDate, Qt, QCoreApplication)
+QRectF, QLineF, QDateTime, QTimer, Slot, QDir, QDate, Qt, QCoreApplication, QPointF)
 from TopicContainerRect import ContainerRect
 from NewTopicDialog import NewTopicDialog
 from InputPasswordDialog import InputPasswordDialog
@@ -69,14 +69,14 @@ class JBTMainWindow(QMainWindow):
         self.back_button.setPos(2, 135)
             # Others
         self.topic_page_label_text = "                                               Topic:                                                                    Description:                                                                                                                                 Date Created:                                                   Security:                             "
-        self.entry_page_label = "                            Entry:                                                                                                                 Date Created:                                                                                  Date Last Modified:                                                                                            "
+        self.entry_page_label = "                                Entry:                                                                                                               Date Created:                                                                                    Date Last Modified:                                                                                            "
         self.current_topic = ""
         self.current_entry = ""
         self.loading_heading = "                                                                                                                                                                                                                     Loading..."
         self.topic_container_list = []
         self.entry_container_list = []
         self.topics_dir = f"{QDir.currentPath()}/JBT-Topics"
-        print(f"{QDir.homePath()}/Documents/JBT-Topics")
+        # print(f"{QDir.homePath()}/Documents/JBT-Topics")
 
         # Setup date and time
         self.date_time_timer.setInterval(1000)
@@ -93,7 +93,13 @@ class JBTMainWindow(QMainWindow):
         self.ui.dockWidget.setFixedHeight(265)
         self.ui.dockWidget.setStyleSheet("background-color: #FFFFFF;")
         self.ui.menuGraphicsView.setFixedSize(1515, 180)
-        self.ui.menuGraphicsView.setStyleSheet("background-color: #FFF8EA;")
+        # Set background color  FFF7E0
+        linearGrad = QLinearGradient(QPointF(100, 100), QPointF(100, 180));
+        linearGrad.setColorAt(0, QColor("#FFF8EA"))
+        linearGrad.setColorAt(0.5, QColor("#FFF7E0"))
+        linearGrad.setColorAt(1, QColor("#FFF8EA"))
+        self.ui.menuGraphicsView.setBackgroundBrush(linearGrad)
+        #self.ui.menuGraphicsView.setStyleSheet("background-color: #FFF8EA;")
         self.menu_scene.setSceneRect(QRectF(0, 0, 1513, 178))
         self.ui.menuGraphicsView.setScene(self.menu_scene)
 
@@ -155,14 +161,15 @@ class JBTMainWindow(QMainWindow):
             # Main graphicsview
         self.main_scene.setSceneRect(QRectF(0, 0, 1534, 607))
         self.ui.mainGraphicsView.setScene(self.main_scene)
+
             # Call to method to prepare the main scene
         self.setupMainScene()
 
 
     @Slot()
     def aboutAuthorButtonClicked(self):
-        about = """Name: Malone K Napier-Jameson\n\nOccupation: Student at UNISA\n\nEmail: Malone.mkd.makoto@gmail.com,
-              63309769@unisa.ac.za\n\nCell: +27 60 780 0917\n\nComments: This program was created in Python using the Qt Framework.
+        about = """Name: Malone K Napier-Jameson\n\nOccupation: Student at UNISA\n\nEmail: MK.Napier-Jameson@Outlook.com
+              \nCell: +27 60 780 0917\n\nComments: This program was created in Python using the Qt Framework.
               """
         dialog = MessageBox(self, "About Author", about)
         dialog.show()
@@ -505,7 +512,7 @@ class JBTMainWindow(QMainWindow):
         with open(file_name, 'rb') as dat_file:
             data_dict = pickle.load(dat_file)
             locked = data_dict["locked"]
-            password = data_dict["password"]
+            password = data_dict["-p&"]
 
        # Check if locked == 'True'
         if locked == True:
@@ -526,6 +533,7 @@ class JBTMainWindow(QMainWindow):
 
         self.main_scene.clear()
         self.ui.lineEdit.setText(self.topic_page_label_text)
+        self.main_scene.setBackgroundBrush(QColor("#FFFFFF"))
 
         # Clear the topic container list
         for c in self.topic_container_list:
@@ -563,12 +571,19 @@ class JBTMainWindow(QMainWindow):
         self.entry_container_list.clear()
 
         # Place logo on the scene
-        name_logo = self.main_scene.addPixmap(QPixmap("Images/background.png"))
+        name_logo = self.main_scene.addPixmap(QPixmap("Images/logo-rm.png"))
         name_logo.setScale(0.8)
-        name_logo.setOpacity(0.5)
         name_logo.setPos(756.5 - name_logo.sceneBoundingRect().width()/2.0, 10)
 
         self.ui.lineEdit.setText(self.loading_heading)
+
+        # Set background color
+        linearGrad = QLinearGradient(QPointF(100, 300), QPointF(100, 450));
+        linearGrad.setColorAt(0, QColor("#FFFFFF"))
+        linearGrad.setColorAt(0.5, QColor("#FFF8EA"))
+        linearGrad.setColorAt(1, QColor("#FFFFFF"))
+
+        self.main_scene.setBackgroundBrush(QBrush(linearGrad))
 
         # Prepare and display the progress bar
         self.progressBar = QProgressBar()
@@ -593,7 +608,7 @@ class JBTMainWindow(QMainWindow):
 
         # Create timer
         self.loading_timer = QTimer(self)
-        self.loading_timer.setInterval(8)
+        self.loading_timer.setInterval(2)
         self.loading_timer.timeout.connect(self.loadingStep)
         self.loading_timer.start()
 
@@ -601,7 +616,6 @@ class JBTMainWindow(QMainWindow):
     # Slot to carry out loading at each time tick
     @Slot()
     def loadingStep(self):
-
         if self.progressBar.value() >= 100:
             # Dislay the text edit
             self.loading_timer.stop()
@@ -629,6 +643,7 @@ class JBTMainWindow(QMainWindow):
     def reloadEntries(self):
         self.current_entry = ""
         self.ui.lineEdit.setText(self.entry_page_label)
+        self.main_scene.setBackgroundBrush(QColor("#FFFFFF"))
         self.displayTopicEntries(self.current_topic)
 
 
@@ -683,7 +698,7 @@ class JBTMainWindow(QMainWindow):
         with open(file_name, 'rb') as dat_file:
             data_dict = pickle.load(dat_file)
             locked = data_dict["locked"]
-            password = data_dict["password"]
+            password = data_dict["-p&"]
 
        # Check if locked == 'True'
         if locked == True:

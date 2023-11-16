@@ -18,8 +18,8 @@
 from PySide6.QtWidgets import (
     QMainWindow, QGraphicsView, QGraphicsScene, QLabel, QTextEdit, QFrame
     )
-from PySide6.QtCore import Qt, QRectF, QLineF
-from PySide6.QtGui import QColor, QPainter, QFont, QPen, QPixmap
+from PySide6.QtCore import Qt, QRectF, QLineF, QPointF
+from PySide6.QtGui import QColor, QPainter, QFont, QPen, QPixmap, QLinearGradient
 
 from CustomGraphicsButtons import FullColorButton
 
@@ -52,7 +52,7 @@ class MessageBox(QMainWindow):
         self.scene.setSceneRect(QRectF(0, 0, 398, 248))
         self.view.setScene(self.scene)
 
-        # Window design
+        # Window design  FFF7DC
         self.setFont(QFont("Corbel Light", 12))
         self.view.setStyleSheet("background-color: #FFF8EA")
         self.setWindowTitle("Notification")

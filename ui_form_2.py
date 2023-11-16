@@ -1,22 +1,7 @@
-"""
- *(C)Copyright 2023 Malone Napier-Jameson
- *
- * This file is part of Journal By Topic.
- * Journal By Topic is free software: you can redistribute it and/or modify it under the terms of
- * the GNU Lesser General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- * Turing Machine Simulator is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General Public License along with Journal By Topic.
- * There is also a copy available inside the application.
- * If not, see <https://www.gnu.org/licenses/>.
-"""
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'form.ui'
+## Form generated from reading UI file 'form_2.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.4.2
 ##
@@ -95,8 +80,7 @@ class Ui_JBT_TextEditWindow(object):
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.homeTabGraphicsView = QGraphicsView(self.homeTab)
         self.homeTabGraphicsView.setObjectName(u"homeTabGraphicsView")
-        self.homeTabGraphicsView.setStyleSheet(u"background-color: rgb(255, 248, 234);\n"
-"")
+        self.homeTabGraphicsView.setStyleSheet(u"background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(255, 248, 234, 255), stop:1 rgba(255, 245, 226, 255));")
         self.homeTabGraphicsView.setFrameShadow(QFrame.Raised)
         self.homeTabGraphicsView.setRenderHints(QPainter.Antialiasing|QPainter.TextAntialiasing)
 

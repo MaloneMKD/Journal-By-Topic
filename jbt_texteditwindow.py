@@ -22,11 +22,11 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QTextEdit, QGraphicsScene, QButtonGroup,
     QCheckBox, QPushButton, QColorDialog, QFontDialog, QComboBox, QFileDialog
 )
-from PySide6.QtCore import QEvent, Qt, QRectF, QLineF, Slot, QDate, QDir, Signal
+from PySide6.QtCore import QEvent, Qt, QRectF, QLineF, Slot, QDate, QDir, Signal, QPointF
 from PySide6.QtGui import (
     QKeyEvent, QFont, QPixmap, QPen, QTextListFormat, QTextBlockFormat, QIcon, QTextFrameFormat,
     QTextTableFormat, QBrush, QTextCharFormat, QColor, QTextLength, QImage, QTextImageFormat,
-    QTextDocument, QTextCursor, QPageSize
+    QTextDocument, QTextCursor, QPageSize, QLinearGradient
 )
 from PySide6.QtPrintSupport import QPrinter
 from PixmapButton import PixmapButton
@@ -46,6 +46,7 @@ from ui_form_2 import Ui_JBT_TextEditWindow
 
 class JBT_TextEditWindow(QMainWindow):
 
+    # Signals
     closing = Signal()
 
     def __init__(self, data_dic, save_path: str, parent=None):
@@ -184,6 +185,9 @@ class JBT_TextEditWindow(QMainWindow):
         self.insert_scene.setSceneRect(QRectF(0, 0, 1492, 66))
         self.ui.insertTabGraphicsView.setScene(self.insert_scene)
         self.ui.insertTabGraphicsView.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
+        self.ui.insertTabGraphicsView.setStyleSheet("""background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0
+        rgba(255, 248, 234, 255), stop:1 rgba(255, 243, 223, 255));""")
 
         # Add Buttons
         label_font = QFont("Corbel")
@@ -1071,10 +1075,12 @@ class JBT_TextEditWindow(QMainWindow):
 
             QPushButton{
                 background-color: #594545;
+                border-color: #594545;
                 color: #FFFFFF;
             }
             QPushButton:hover{
                 background-color: #AD8666;
+                border-color: #AD8666;
                 color: #FFFFFF;
             }
 
@@ -1147,10 +1153,12 @@ class JBT_TextEditWindow(QMainWindow):
 
         QPushButton{
             background-color: #594545;
+            border-color: #594545;
             color: #FFFFFF;
         }
         QPushButton:hover{
             background-color: #AD8666;
+            border-color: #AD8666;
             color: #FFFFFF;
         }
 
@@ -1371,10 +1379,12 @@ class JBT_TextEditWindow(QMainWindow):
 
             QPushButton{
                 background-color: #594545;
+                border-color: #594545;
                 color: #FFFFFF;
             }
             QPushButton:hover{
                 background-color: #AD8666;
+                border-color: #AD8666;
                 color: #FFFFFF;
             }
 
@@ -1446,10 +1456,12 @@ class JBT_TextEditWindow(QMainWindow):
 
         QPushButton{
             background-color: #594545;
+            border-color: #594545;
             color: #FFFFFF;
         }
         QPushButton:hover{
             background-color: #AD8666;
+            border-color: #AD8666;
             color: #FFFFFF;
         }
 
