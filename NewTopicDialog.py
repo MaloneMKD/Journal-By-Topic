@@ -81,10 +81,10 @@ class NewTopicDialog(QMainWindow):
         text_font.setItalic(True)
             # Background picture
         background_pic = self.scene.addPixmap(QPixmap("Images/Logo - cropped.png"))
-        background_pic.setScale(0.16)
+        background_pic.setScale(0.32)
         background_pic.setZValue(1)
-        background_pic.setOpacity(0.35)
-        background_pic.setPos(400, 220 + sep_distance * 2)
+        background_pic.setOpacity(0.40)
+        background_pic.setPos(400, 215 + sep_distance * 2)
             # page name container
         # self.scene.addRect(QRectF(2, 2, 586, 60))
         label_font = QFont("Corbel Light")
@@ -196,8 +196,8 @@ class NewTopicDialog(QMainWindow):
         "topic_name": self.topic_name_line_edit.text(),
         "topic_description": self.desc_text_edit.toPlainText(),
         "locked": self.locked_checkbox.isChecked(),
-        "-p&": self.hashPassword(self.password_line_edit.text()), #Password
-        "-pH&": self.passwordHint_TextEdit.toPlainText() #Password hint
+        "password": self.hashPassword(self.password_line_edit.text()),
+        "passwordHint": self.passwordHint_TextEdit.toPlainText()
         }
         self.data_ready.emit(data)
         self.close()

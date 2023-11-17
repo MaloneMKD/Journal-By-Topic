@@ -186,8 +186,8 @@ class JBT_TextEditWindow(QMainWindow):
         self.ui.insertTabGraphicsView.setScene(self.insert_scene)
         self.ui.insertTabGraphicsView.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        self.ui.insertTabGraphicsView.setStyleSheet("""background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0
-        rgba(255, 248, 234, 255), stop:1 rgba(255, 243, 223, 255));""")
+#        self.ui.insertTabGraphicsView.setStyleSheet("""background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0
+#        rgba(255, 248, 234, 255), stop:1 rgba(255, 243, 223, 255));""")
 
         # Add Buttons
         label_font = QFont("Corbel")
@@ -1599,6 +1599,7 @@ class JBT_TextEditWindow(QMainWindow):
         date_stylesheet = self.ui.lineEdit_2.styleSheet()
         body_html = self.ui.textEdit.toHtml()
 
+        # Encrypt the document body
         key = Fernet.generate_key()
         f = Fernet(key)
         data = f.encrypt(body_html.encode())

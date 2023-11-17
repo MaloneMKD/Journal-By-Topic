@@ -1,19 +1,5 @@
-"""
- *(C)Copyright 2023 Malone Napier-Jameson
- *
- * This file is part of Journal By Topic.
- * Journal By Topic is free software: you can redistribute it and/or modify it under the terms of
- * the GNU Lesser General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- * Turing Machine Simulator is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General Public License along with Journal By Topic.
- * There is also a copy available inside the application.
- * If not, see <https://www.gnu.org/licenses/>.
-"""
 # This Python file uses the following encoding: utf-8
+
 from PySide6.QtWidgets import (
     QMainWindow,
     QGraphicsView, QGraphicsScene,
@@ -22,34 +8,27 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QRectF, Slot, QLineF, Signal
 from PySide6.QtGui import QFont, QPainter, QPen, QPixmap
 from CustomGraphicsButtons import FullColorButton
-from cryptography.fernet import Fernet
 import bcrypt
 
+class ResetPasswordDialog(QMainWindow):
 
+    # Class signals
+    data_ready = Signal(dict)
 
-class InputPasswordDialog(QMainWindow):
-    """This class is a window that gets password input and authenticates them"""
-
-    # Signals
-    authentication_successful = Signal(str)
-
-    def __init__(self, topic_data, hashed_password, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.Dialog)
-
         # Window configurations
         self.setFixedSize(500, 300)
         self.setGeometry(485, 245, 500, 300)
-        self.setWindowTitle("Unlock Topic")
+        self.setWindowTitle("Reset Password")
         self.setWindowIcon(QPixmap("Images/logo.png"))
 
         # Variabe declarations
-        self.topic_data = topic_data
-        self.hashed_password = hashed_password
         self.view = QGraphicsView(self)
         self.scene = QGraphicsScene(0, 0, 498, 298, self)
         self.password_line_edit = QLineEdit()
         self.passwordHint_TextEdit = QTextEdit()
-        self.proceed_button = FullColorButton(QRectF(0, 0, 150, 50), text="Proceed")
+        self.proceed_button = FullColorButton(QRectF(0, 0, 150, 50), text="Save")
         self.cancel_button = FullColorButton(QRectF(0, 0, 150, 50), text="Cancel")
 
         # Window design
@@ -68,26 +47,26 @@ class InputPasswordDialog(QMainWindow):
         label_font.setItalic(True)
             # Messege
         # self.scene.addRect(QRectF(2, 13, 494, 50))
-        self.display_message = self.scene.addText("Please enter the password below...")
+        self.display_message = self.scene.addText("Please enter your new password and hint below...")
         self.display_message.setPos(4, 15)
         self.display_message.setFont(label_font)
         self.display_message.setDefaultTextColor("#4D4D4D")
         self.center_message()
 
-            # Separator line
+        # Separator line
         self.scene.addLine(QLineF(150, 50, 348, 50), QPen(Qt.GlobalColor.lightGray))
 
             # Password input
         # self.scene.addRect(QRectF(2, 63 + sep_distance, 494, 50))
-        password_label = self.scene.addText("Password:")
+        password_label = self.scene.addText("New\nPassword:")
         password_label.setFont(label_font)
         password_label.setDefaultTextColor(Qt.GlobalColor.darkGray)
-        password_label.setPos(4, 65 + sep_distance)
+        password_label.setPos(4, 50 + sep_distance)
 
         self.password_line_edit.setFixedSize(385, 46)
         self.password_line_edit.setFrame(False)
         self.password_line_edit.setFont(QFont("Corbel Light", 11))
-        self.password_line_edit.setPlaceholderText("Enter the password")
+        self.password_line_edit.setPlaceholderText("Enter the new password")
         self.password_line_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self.password_line_edit.returnPressed.connect(self.proceed_button_clicked)
         password_line_edit_proxy = self.scene.addWidget(self.password_line_edit)
@@ -97,24 +76,16 @@ class InputPasswordDialog(QMainWindow):
         passwordHint_label = self.scene.addText("Password\nHint:")
         passwordHint_label.setFont(label_font)
         passwordHint_label.setDefaultTextColor(Qt.GlobalColor.darkGray)
-        passwordHint_label.setPos(4, 125 + sep_distance)
+        passwordHint_label.setPos(4, 130 + sep_distance)
 
         self.passwordHint_TextEdit.setFixedSize(385, 80)
         self.passwordHint_TextEdit.setFrameShape(QFrame.Shape.NoFrame)
         self.passwordHint_TextEdit.setFont(QFont("Corbel Light", 11.0))
-        self.passwordHint_TextEdit.setReadOnly(True)
-
-        if(topic_data["passwordHint"]== ""):
-            self.passwordHint_TextEdit.setText("No hint given for this topic.")
-        else:
-            f = Fernet(topic_data["pfk"])
-            hint = f.decrypt(topic_data["passwordHint"])
-            self.passwordHint_TextEdit.setText(hint.decode())
-
+        self.passwordHint_TextEdit.setPlaceholderText("Enter a hint for your new password")
         self.passwordHint_TextEdit.setStyleSheet("""
             QTextEdit{
                 background: #FFFFFF;
-                color: #7F7F7F;
+                color: #4D4D4D;
             }
             QScrollBar:vertical {
                 border: 0px solid #c6c6c6;
@@ -167,6 +138,13 @@ class InputPasswordDialog(QMainWindow):
         self.display_message.scenePos().y())
 
 
+    # Method to hash a given password
+    def hashPassword(self, password):
+        salt = bcrypt.gensalt()
+        hashed_pwd = bcrypt.hashpw(password.encode('utf-8'), salt)
+        return hashed_pwd
+
+
     @Slot()
     def cancel_button_clicked(self):
         self.close()
@@ -174,11 +152,9 @@ class InputPasswordDialog(QMainWindow):
 
     @Slot()
     def proceed_button_clicked(self):
-        password = self.password_line_edit.text()
-        is_correct_password = bcrypt.checkpw(password.encode('utf-8'), self.hashed_password)
-        if is_correct_password:
-            self.authentication_successful.emit(self.topic_data["topic_name"])
-            self.close()
-        else:
-            self.display_message.setPlainText("Incorrect password! Please re-enter...")
-            self.center_message()
+        data = {
+            "password": self.hashPassword(self.password_line_edit.text()),
+            "passwordHint": self.passwordHint_TextEdit.toPlainText()
+        }
+        self.data_ready.emit(data)
+        self.close()

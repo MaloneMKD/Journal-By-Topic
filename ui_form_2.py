@@ -80,7 +80,7 @@ class Ui_JBT_TextEditWindow(object):
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.homeTabGraphicsView = QGraphicsView(self.homeTab)
         self.homeTabGraphicsView.setObjectName(u"homeTabGraphicsView")
-        self.homeTabGraphicsView.setStyleSheet(u"background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(255, 248, 234, 255), stop:1 rgba(255, 245, 226, 255));")
+        self.homeTabGraphicsView.setStyleSheet(u"background-color: rgb(255, 248, 234);")
         self.homeTabGraphicsView.setFrameShadow(QFrame.Raised)
         self.homeTabGraphicsView.setRenderHints(QPainter.Antialiasing|QPainter.TextAntialiasing)
 

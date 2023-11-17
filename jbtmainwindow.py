@@ -29,6 +29,8 @@ from InputPasswordDialog import InputPasswordDialog
 from jbt_texteditwindow import JBT_TextEditWindow
 from MessageBox import MessageBox
 from QuestionDialog import QuestionDialog
+from ResetPasswordDialog import ResetPasswordDialog
+from cryptography.fernet import Fernet
 
 # Important:
 # You need to run the following command to generate the ui_form.py file
@@ -38,7 +40,7 @@ from ui_form import Ui_JBTMainWindow
 from PixmapButton import PixmapButton
 
 class JBTMainWindow(QMainWindow):
-
+    #TODO fix errors
     def __init__(self, parent=None):
         super().__init__(parent)
         # Window setup
@@ -60,6 +62,8 @@ class JBTMainWindow(QMainWindow):
             #Button variables
         self.new_topic_button = PixmapButton(QPixmap("Images/New topic gray.png"), QPixmap("Images/New topic lightgray.png"))
         self.new_entry_button = PixmapButton(QPixmap("Images/new-entry-gray.png"), QPixmap("Images/new-entry-lightgray.png"))
+        self.resetPW_button = PixmapButton(QPixmap("Images/resetPW.png"), QPixmap("Images/resetPW-gray.png"))
+        self.resetPW_label = "";
         self.about_qt_button = PixmapButton(QPixmap("Images/qt.png"), QPixmap("Images/qt-lg.png"))
         self.about_author_button = PixmapButton(QPixmap("Images/about.png"), QPixmap("Images/about-lg.png"))
         self.exit_button = PixmapButton(QPixmap("Images/Exit-gray.png"), QPixmap("Images/Exit-lightgray.png"))
@@ -94,12 +98,12 @@ class JBTMainWindow(QMainWindow):
         self.ui.dockWidget.setStyleSheet("background-color: #FFFFFF;")
         self.ui.menuGraphicsView.setFixedSize(1515, 180)
         # Set background color  FFF7E0
-        linearGrad = QLinearGradient(QPointF(100, 100), QPointF(100, 180));
-        linearGrad.setColorAt(0, QColor("#FFF8EA"))
-        linearGrad.setColorAt(0.5, QColor("#FFF7E0"))
-        linearGrad.setColorAt(1, QColor("#FFF8EA"))
-        self.ui.menuGraphicsView.setBackgroundBrush(linearGrad)
-        #self.ui.menuGraphicsView.setStyleSheet("background-color: #FFF8EA;")
+#        linearGrad = QLinearGradient(QPointF(100, 100), QPointF(100, 180));
+#        linearGrad.setColorAt(0, QColor("#FFF8EA"))
+#        linearGrad.setColorAt(0.5, QColor("#FFF7E0"))
+#        linearGrad.setColorAt(1, QColor("#FFF8EA"))
+#        self.ui.menuGraphicsView.setBackgroundBrush(linearGrad)
+        self.ui.menuGraphicsView.setStyleSheet("background-color: #FFF8EA;")
         self.menu_scene.setSceneRect(QRectF(0, 0, 1513, 178))
         self.ui.menuGraphicsView.setScene(self.menu_scene)
 
@@ -370,6 +374,18 @@ class JBTMainWindow(QMainWindow):
     def displayTopicEntries(self, name):
         """Displays all entries in the topic"""
 
+        # Add the change password button to the menu scene
+        if(~self.menu_scene.items().__contains__(self.resetPW_button)):
+            self.menu_scene.addItem(self.resetPW_button)
+            self.resetPW_button.setPos(410, 85)
+            self.resetPW_button.setToolTip("Reset the topic password")
+            self.resetPW_button.clicked.connect(self.resetPWButtonClicked)
+
+        if(~self.menu_scene.items().__contains__(self.resetPW_label)):
+            self.resetPW_label = self.menu_scene.addText("Reset Password", QFont("Corbel", 12))
+            self.resetPW_label.setDefaultTextColor(Qt.GlobalColor.darkGray)
+            self.resetPW_label.setPos(480, 88)
+
         self.current_topic = name
         if self.back_button == None:
             self.back_button = PixmapButton(QPixmap("Images/back-gray.png"), QPixmap("Images/back-lightgray.png"))
@@ -490,6 +506,40 @@ class JBTMainWindow(QMainWindow):
         self.entry_animation_timer.start()
 
 
+    @Slot()
+    def resetPWButtonClicked(self):
+        dialog = ResetPasswordDialog(self)
+        dialog.data_ready.connect(self.resetPassword)
+        dialog.show()
+
+
+    @Slot(dict)
+    def resetPassword(self, newData):
+        # Load the data in the .dat file
+        if self.current_topic != "":
+            #print(f"{self.topics_dir}/{self.current_topic}/{self.current_topic}.dat")
+            with open(f"{self.topics_dir}/{self.current_topic}/{self.current_topic}.dat", "rb") as file:
+                data_dic = pickle.load(file)
+
+            # Update the password and hint
+            data_dic["password"] = newData["password"]
+            data_dic["passwordHint"] = newData["passwordHint"]
+
+            # Encrypt password and hint
+            key = Fernet.generate_key()
+            f = Fernet(key)
+            data_dic["password"] = f.encrypt(data_dic["password"])
+            data_dic["passwordHint"] = f.encrypt(data_dic["passwordHint"].encode('utf-8'))
+            data_dic["pfk"] = key
+
+            # Save the data in the .dat file
+            with open(f"{self.topics_dir}/{self.current_topic}/{self.current_topic}.dat", "wb") as file:
+                pickle.dump(data_dic, file)
+
+            message = MessageBox(self, "Success!", "The password has been successfully changed.");
+            message.show()
+
+
     # Slot to animate topic objects
     @Slot()
     def animateEntries(self):
@@ -511,8 +561,12 @@ class JBTMainWindow(QMainWindow):
         file_name = f"{self.topics_dir}/{name}/{name}.dat"
         with open(file_name, 'rb') as dat_file:
             data_dict = pickle.load(dat_file)
-            locked = data_dict["locked"]
-            password = data_dict["-p&"]
+
+        locked = data_dict["locked"]
+
+        # Decrypt the password
+        f = Fernet(data_dict["pfk"])
+        password = f.decrypt(data_dict["password"])
 
        # Check if locked == 'True'
         if locked == True:
@@ -526,10 +580,17 @@ class JBTMainWindow(QMainWindow):
     # Slot to respond to back button clicked
     @Slot()
     def backButtonClicked(self):
+        # Remove the back button
         if self.back_button in self.menu_scene.items():
             self.menu_scene.removeItem(self.back_button)
             del self.back_button
             self.back_button = None
+
+        # Remove the reset password button and label
+        if self.resetPW_button in self.menu_scene.items():
+            self.menu_scene.removeItem(self.resetPW_button)
+        if self.resetPW_label in self.menu_scene.items():
+            self.menu_scene.removeItem(self.resetPW_label)
 
         self.main_scene.clear()
         self.ui.lineEdit.setText(self.topic_page_label_text)
@@ -621,6 +682,12 @@ class JBTMainWindow(QMainWindow):
             self.loading_timer.stop()
             del self.loading_timer
 
+            # Remove the reset password button and label
+            if self.resetPW_button in self.menu_scene.items():
+                self.menu_scene.removeItem(self.resetPW_button)
+            if self.resetPW_label in self.menu_scene.items():
+                self.menu_scene.removeItem(self.resetPW_label)
+
             # Open the file and get the data
             if self.current_entry != "":
                 with open(f"{self.topics_dir}/{self.current_topic}/{self.current_entry}", "rb") as file:
@@ -628,10 +695,12 @@ class JBTMainWindow(QMainWindow):
 
                 te_window = JBT_TextEditWindow(data_dic, f"{self.topics_dir}/{self.current_topic}", self)
                 te_window.closing.connect(self.reloadEntries)
+                self.main_scene.clear()
                 te_window.showFullScreen()
             else:
                 te_window = JBT_TextEditWindow(None, f"{self.topics_dir}/{self.current_topic}", self)
                 te_window.closing.connect(self.reloadEntries)
+                self.main_scene.clear()
                 te_window.showFullScreen()
 
         else:
@@ -678,6 +747,14 @@ class JBTMainWindow(QMainWindow):
             # Create .dat file
             dir.cd(data_dict['topic_name'])
             data_dict["date_created"] = QDate.currentDate().toString("dddd - dd MMMM yyyy")
+
+            # Encrypt password and hint
+            key = Fernet.generate_key()
+            f = Fernet(key)
+            data_dict["password"] = f.encrypt(data_dict["password"])
+            data_dict["passwordHint"] = f.encrypt(data_dict["passwordHint"].encode('utf-8'))
+            data_dict["pfk"] = key
+
             with open(f"{dir.path()}/{data_dict['topic_name']}.dat", "wb") as file:
                 pickle.dump(data_dict, file)
 
@@ -698,7 +775,10 @@ class JBTMainWindow(QMainWindow):
         with open(file_name, 'rb') as dat_file:
             data_dict = pickle.load(dat_file)
             locked = data_dict["locked"]
-            password = data_dict["-p&"]
+
+        # Decrypt the password
+        f = Fernet(data_dict["pfk"])
+        password = f.decrypt(data_dict["password"])
 
        # Check if locked == 'True'
         if locked == True:
