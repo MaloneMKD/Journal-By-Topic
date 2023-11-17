@@ -17,11 +17,12 @@
 from PySide6.QtWidgets import (
     QMainWindow,
     QGraphicsView, QGraphicsScene,
-    QLineEdit, QFrame, QTextEdit
+    QLineEdit, QFrame, QTextEdit, QCheckBox
     )
 from PySide6.QtCore import Qt, QRectF, Slot, QLineF, Signal
 from PySide6.QtGui import QFont, QPainter, QPen, QPixmap
 from CustomGraphicsButtons import FullColorButton
+from PixmapButton import PixmapButton
 from cryptography.fernet import Fernet
 import bcrypt
 
@@ -51,6 +52,7 @@ class InputPasswordDialog(QMainWindow):
         self.passwordHint_TextEdit = QTextEdit()
         self.proceed_button = FullColorButton(QRectF(0, 0, 150, 50), text="Proceed")
         self.cancel_button = FullColorButton(QRectF(0, 0, 150, 50), text="Cancel")
+        self.showPasswordButton = QCheckBox()
 
         # Window design
         self.view.setScene(self.scene)
@@ -83,6 +85,33 @@ class InputPasswordDialog(QMainWindow):
         password_label.setFont(label_font)
         password_label.setDefaultTextColor(Qt.GlobalColor.darkGray)
         password_label.setPos(4, 65 + sep_distance)
+
+            # Show password button
+        self.showPasswordButton.setStyleSheet("""
+                QCheckBox{
+                    spacing: 0px;
+                    background-color:#FFF8EA}
+
+                QCheckBox::indicator{
+                    width: 25px;
+                    height: 25px;}
+
+                QCheckBox::indicator:unchecked{
+                image: url(Images/eye-gray-cross.png);}
+
+                QCheckBox::indicator:checked{
+                image: url(Images/eye-gray.png);}
+
+                QCheckBox::indicator:unchecked:hover{
+                image: url(Images/eye-lightgray-crossed.png);}
+
+                QCheckBox::indicator:checked:hover{
+                image: url(Images/eye-lightgray.png);}
+            """)
+        self.showPasswordButton.setToolTip("Hide/Show Password")
+        self.showPasswordButton.clicked.connect(self.showPasswordButtonClicked)
+        showPasswordButton_proxy = self.scene.addWidget(self.showPasswordButton)
+        showPasswordButton_proxy.setPos(424, 24)
 
         self.password_line_edit.setFixedSize(385, 46)
         self.password_line_edit.setFrame(False)
@@ -159,6 +188,14 @@ class InputPasswordDialog(QMainWindow):
         self.cancel_button.set_text_color(Qt.GlobalColor.white)
         self.cancel_button.clicked.connect(self.cancel_button_clicked)
         self.scene.addItem(self.cancel_button)
+
+
+    @Slot()
+    def showPasswordButtonClicked(self):
+        if(self.showPasswordButton.isChecked()):
+            self.password_line_edit.setEchoMode(QLineEdit.EchoMode.Normal)
+        else:
+            self.password_line_edit.setEchoMode(QLineEdit.EchoMode.Password)
 
 
     # Method to center the message on the window
