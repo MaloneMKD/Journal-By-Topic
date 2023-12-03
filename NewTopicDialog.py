@@ -5,7 +5,7 @@
  * Journal By Topic is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software Foundation,
  * either version 3 of the License, or (at your option) any later version.
- * Turing Machine Simulator is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * Journal By Topic is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
 
@@ -63,6 +63,7 @@ class NewTopicDialog(QMainWindow):
         self.locked_checkbox = QCheckBox()
         self.password_line_edit = QLineEdit()
         self.passwordHint_TextEdit = QTextEdit()
+        self.showPasswordButton = QCheckBox()
 
         # Setup view and scene
         self.setCentralWidget(self.view)
@@ -159,6 +160,33 @@ class NewTopicDialog(QMainWindow):
         passwordHint_TextEdit_proxy = self.scene.addWidget(self.passwordHint_TextEdit)
         passwordHint_TextEdit_proxy.setPos(130, 372 + sep_distance * 3)
 
+        # Show password button
+        self.showPasswordButton.setStyleSheet("""
+                QCheckBox{
+                    spacing: 0px;
+                    background-color:#FFF8EA}
+
+                QCheckBox::indicator{
+                    width: 25px;
+                    height: 25px;}
+
+                QCheckBox::indicator:unchecked{
+                image: url(Images/eye-gray-cross.png);}
+
+                QCheckBox::indicator:checked{
+                image: url(Images/eye-gray.png);}
+
+                QCheckBox::indicator:unchecked:hover{
+                image: url(Images/eye-lightgray-crossed.png);}
+
+                QCheckBox::indicator:checked:hover{
+                image: url(Images/eye-lightgray.png);}
+            """)
+        self.showPasswordButton.setToolTip("Hide/Show Password")
+        self.showPasswordButton.clicked.connect(self.showPasswordButtonClicked)
+        showPasswordButton_proxy = self.scene.addWidget(self.showPasswordButton)
+        showPasswordButton_proxy.setPos(530, 40)
+
             # Buttons
         self.create_button.setPos(92.5, 530)
         self.create_button.set_button_color("#594545")
@@ -184,6 +212,14 @@ class NewTopicDialog(QMainWindow):
             self.password_line_edit.setEnabled(False)
 
 
+    @Slot()
+    def showPasswordButtonClicked(self):
+        if(self.showPasswordButton.isChecked()):
+            self.password_line_edit.setEchoMode(QLineEdit.EchoMode.Normal)
+        else:
+            self.password_line_edit.setEchoMode(QLineEdit.EchoMode.Password)
+
+
     # Method to hash a given password
     def hashPassword(self, password):
         salt = bcrypt.gensalt()
@@ -192,12 +228,15 @@ class NewTopicDialog(QMainWindow):
 
 
     def prepare_data(self):
+        hint = self.passwordHint_TextEdit.toPlainText()
+        if hint == "":
+            hint = "No hint given for this topic"
         data = {
         "topic_name": self.topic_name_line_edit.text(),
         "topic_description": self.desc_text_edit.toPlainText(),
         "locked": self.locked_checkbox.isChecked(),
         "password": self.hashPassword(self.password_line_edit.text()),
-        "passwordHint": self.passwordHint_TextEdit.toPlainText()
+        "passwordHint": hint
         }
         self.data_ready.emit(data)
         self.close()

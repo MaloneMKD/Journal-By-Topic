@@ -5,7 +5,7 @@
  * Journal By Topic is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software Foundation,
  * either version 3 of the License, or (at your option) any later version.
- * Turing Machine Simulator is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * Journal By Topic is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
 
@@ -19,7 +19,7 @@ import pickle
 import bcrypt
 
 from PySide6.QtWidgets import (
-QApplication, QMainWindow, QGraphicsItem, QProgressBar, QGraphicsScene)
+QApplication, QMainWindow, QGraphicsItem, QProgressBar, QGraphicsScene, QMessageBox)
 from PySide6.QtGui import QPen, QPixmap, QColor, QFont, QBrush, QLinearGradient
 from PySide6.QtCore import (
 QRectF, QLineF, QDateTime, QTimer, Slot, QDir, QDate, Qt, QCoreApplication, QPointF)
@@ -72,14 +72,15 @@ class JBTMainWindow(QMainWindow):
         self.back_button.setToolTip("Exit current topic")
         self.back_button.setPos(2, 135)
             # Others
-        self.topic_page_label_text = "                                               Topic:                                                                    Description:                                                                                                                                 Date Created:                                                   Security:                             "
+        self.topic_page_label_text = "                                               Topic:                                                                    Description:                                                                                                                                 Date Created:                                                    Security:                             "
         self.entry_page_label = "                                Entry:                                                                                                               Date Created:                                                                                    Date Last Modified:                                                                                            "
         self.current_topic = ""
         self.current_entry = ""
         self.loading_heading = "                                                                                                                                                                                                                     Loading..."
         self.topic_container_list = []
         self.entry_container_list = []
-        self.topics_dir = f"{QDir.currentPath()}/JBT-Topics"
+        self.topics_dir = f"{QDir.homePath()}/Documents/JBT-Topics"
+        # self.topics_dir = f"{QDir.currentPath()}/JBT-Topics"
         # print(f"{QDir.homePath()}/Documents/JBT-Topics")
 
         # Setup date and time
@@ -162,9 +163,10 @@ class JBTMainWindow(QMainWindow):
         self.exit_button.setToolTip("Exit")
         self.exit_button.clicked.connect(self.exitApplication)
 
-            # Main graphicsview
+            # Main graphics view
         self.main_scene.setSceneRect(QRectF(0, 0, 1534, 607))
         self.ui.mainGraphicsView.setScene(self.main_scene)
+        self.ui.lineEdit.setReadOnly(True)
 
             # Call to method to prepare the main scene
         self.setupMainScene()
@@ -181,7 +183,9 @@ class JBTMainWindow(QMainWindow):
 
     @Slot()
     def aboutQTButtonClicked(self):
-        QApplication.aboutQt()
+        #QApplication.aboutQt()
+        QMessageBox.aboutQt(self, "About QT")
+
 
 
     # Slot to respond to new entry button being clicked
@@ -309,7 +313,7 @@ class JBTMainWindow(QMainWindow):
                 security_icon.setToolTip("This topic is locked")
             else:
                 security_icon = self.main_scene.addPixmap(QPixmap("Images\lock-unlocked.png"))
-                security_icon.setToolTip("This topic is unlocked")
+                security_icon.setToolTip("This topic is not locked")
             security_icon.setScale(0.8)
             security_icon.setPos(1205, 25)
             security_icon.setParentItem(rect)
@@ -326,8 +330,10 @@ class JBTMainWindow(QMainWindow):
             # Separator line
             self.main_scene.addLine(QLineF(250.5, 84 + position, 1252.5, 84 + position), QPen(QColor("#B2B2B2"), 2.0))
 
+            # Increment position
             position += 88
 
+        # Prepare for and start animation
         self.topic_animation_timer = QTimer(self)
         self.topic_animation_timer.setInterval(3)
         self.topic_animation_timer.timeout.connect(self.topicAnimation)
@@ -371,17 +377,17 @@ class JBTMainWindow(QMainWindow):
 
     # Slot to display topic entries
     @Slot(str)
-    def displayTopicEntries(self, name):
+    def displayTopicEntries(self, name, locked = True):
         """Displays all entries in the topic"""
 
         # Add the change password button to the menu scene
-        if(~self.menu_scene.items().__contains__(self.resetPW_button)):
+        if(~self.menu_scene.items().__contains__(self.resetPW_button) & locked):
             self.menu_scene.addItem(self.resetPW_button)
             self.resetPW_button.setPos(410, 85)
             self.resetPW_button.setToolTip("Reset the topic password")
             self.resetPW_button.clicked.connect(self.resetPWButtonClicked)
 
-        if(~self.menu_scene.items().__contains__(self.resetPW_label)):
+        if(~self.menu_scene.items().__contains__(self.resetPW_label) & locked):
             self.resetPW_label = self.menu_scene.addText("Reset Password", QFont("Corbel", 12))
             self.resetPW_label.setDefaultTextColor(Qt.GlobalColor.darkGray)
             self.resetPW_label.setPos(480, 88)
@@ -574,7 +580,7 @@ class JBTMainWindow(QMainWindow):
            password_dialog.authentication_successful.connect(self.displayTopicEntries)
            password_dialog.show()
         else:
-           self.displayTopicEntries(name)
+           self.displayTopicEntries(name, data_dict["locked"])
 
 
     # Slot to respond to back button clicked
