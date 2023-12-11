@@ -32,6 +32,7 @@ class MessageBox(QMainWindow):
         self.setFixedSize(400, 250)
         self.setWindowTitle("Notification")
         self.setWindowIcon(QPixmap("Images/logo.png"))
+        self.setWindowModality(Qt.WindowModality.WindowModal)
 
         # Variables
 

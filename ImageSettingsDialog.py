@@ -36,6 +36,7 @@ class ImageSettingsDialog(QMainWindow):
         self.setWindowTitle("Image Settings")
         self.setWindowIcon(QPixmap("Images/logo.png"))
         self.setFont(QFont("Corbel Light", 12))
+        self.setWindowModality(Qt.WindowModality.WindowModal)
 
         # Variables
             # Misc

@@ -49,6 +49,7 @@ class NewTopicDialog(QMainWindow):
         self.setGeometry(465, 170 , 600, 600)
         self.setWindowTitle("New Topic")
         self.setWindowIcon(QPixmap("Images/logo.png"))
+        self.setWindowModality(Qt.WindowModality.WindowModal)
 
         # Variable declarations
         self.view = QGraphicsView(self)

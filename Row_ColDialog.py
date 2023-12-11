@@ -32,6 +32,7 @@ class Row_ColDialog(QMainWindow):
         self.setGeometry(485, 245, 500, 200)
         self.setWindowTitle("Table Size")
         self.setWindowIcon(QPixmap("Images/logo.png"))
+        self.setWindowModality(Qt.WindowModality.WindowModal)
 
         # Variables
         self.view = QGraphicsView(self)

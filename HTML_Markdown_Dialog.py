@@ -35,6 +35,7 @@ class HTML_Markdown_Dialog(QMainWindow):
         self.setFixedSize(700, 500)
         self.setWindowTitle("HTML - Markdown")
         self.setWindowIcon(QPixmap("Images/logo.png"))
+        self.setWindowModality(Qt.WindowModality.WindowModal)
 
         # Variables
 

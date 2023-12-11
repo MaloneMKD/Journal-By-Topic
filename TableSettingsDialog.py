@@ -35,6 +35,7 @@ class TableSettingsDialog(QMainWindow):
         self.setFixedSize(1000, 800)
         self.setWindowTitle("Table")
         self.setWindowIcon(QPixmap("Images/logo.png"))
+        self.setWindowModality(Qt.WindowModality.WindowModal)
 
         # Variables
             # View and scene

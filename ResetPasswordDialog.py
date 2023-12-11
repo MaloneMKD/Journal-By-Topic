@@ -37,6 +37,7 @@ class ResetPasswordDialog(QMainWindow):
         self.setGeometry(485, 245, 500, 300)
         self.setWindowTitle("Reset Password")
         self.setWindowIcon(QPixmap("Images/logo.png"))
+        self.setWindowModality(Qt.WindowModality.WindowModal)
 
         # Variabe declarations
         self.view = QGraphicsView(self)

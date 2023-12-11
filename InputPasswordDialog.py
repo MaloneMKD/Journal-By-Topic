@@ -42,6 +42,7 @@ class InputPasswordDialog(QMainWindow):
         self.setGeometry(485, 245, 500, 300)
         self.setWindowTitle("Unlock Topic")
         self.setWindowIcon(QPixmap("Images/logo.png"))
+        self.setWindowModality(Qt.WindowModality.WindowModal)
 
         # Variabe declarations
         self.topic_data = topic_data
