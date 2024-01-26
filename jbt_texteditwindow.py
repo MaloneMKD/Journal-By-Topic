@@ -22,11 +22,11 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QTextEdit, QGraphicsScene, QButtonGroup,
     QCheckBox, QPushButton, QColorDialog, QFontDialog, QComboBox, QFileDialog
 )
-from PySide6.QtCore import QEvent, Qt, QRectF, QLineF, Slot, QDate, QDir, Signal, QPointF
+from PySide6.QtCore import QEvent, Qt, QRectF, QLineF, Slot, QDate, QDir, Signal
 from PySide6.QtGui import (
     QKeyEvent, QFont, QPixmap, QPen, QTextListFormat, QTextBlockFormat, QIcon, QTextFrameFormat,
     QTextTableFormat, QBrush, QTextCharFormat, QColor, QTextLength, QImage, QTextImageFormat,
-    QTextDocument, QTextCursor, QPageSize, QLinearGradient
+    QTextDocument, QTextCursor, QPageSize
 )
 from PySide6.QtPrintSupport import QPrinter
 from PixmapButton import PixmapButton
@@ -49,7 +49,7 @@ class JBT_TextEditWindow(QMainWindow):
     # Signals
     closing = Signal()
 
-    def __init__(self, data_dic, save_path: str, parent=None):
+    def __init__(self, data_dic, unique_id, save_path: str, parent=None):
         super().__init__(parent)
         self.ui = Ui_JBT_TextEditWindow()
         self.ui.setupUi(self)
@@ -57,6 +57,9 @@ class JBT_TextEditWindow(QMainWindow):
         # Window configuration
         self.setCentralWidget(self.ui.textEdit)
         self.ui.tabWidget.setFixedHeight(125)
+
+        # Unique ID
+        self.topic_id = unique_id
 
         # Other
         self.ui.lineEdit.textEdited.connect(self.titleChanged)
@@ -1612,7 +1615,8 @@ class JBT_TextEditWindow(QMainWindow):
             "date_stylesheet": date_stylesheet,
             "last_modified": QDate.currentDate().toString("dddd - dd MMMM yyyy"),
             "fk": key,
-            "encrypted_body": data
+            "encrypted_body": data,
+            "encrypted_unique_id": self.topic_id # Encrypted using topic key
         }
 
         with open(f"{self.save_path}/{title}.jbt", "wb") as save_file:
@@ -1636,6 +1640,7 @@ class JBT_TextEditWindow(QMainWindow):
     @Slot()
     def saveAsButtonClicked(self):
         file_name = QFileDialog.getSaveFileName(self, "Save As PDF", f"{QDir.homePath()}/Documents", "PDF(*.pdf)")
+
         if file_name[0] != "":
             # Gather the save data
             title = self.ui.lineEdit.text()

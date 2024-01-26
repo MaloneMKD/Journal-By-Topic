@@ -17,6 +17,7 @@
 import sys
 import pickle
 import bcrypt
+import secrets
 
 from PySide6.QtWidgets import (
 QApplication, QMainWindow, QGraphicsItem, QProgressBar, QGraphicsScene, QMessageBox)
@@ -30,7 +31,7 @@ from jbt_texteditwindow import JBT_TextEditWindow
 from MessageBox import MessageBox
 from QuestionDialog import QuestionDialog
 from ResetPasswordDialog import ResetPasswordDialog
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 # Important:
 # You need to run the following command to generate the ui_form.py file
@@ -74,7 +75,7 @@ class JBTMainWindow(QMainWindow):
             # Others
         self.topic_page_label_text = "                                               Topic:                                                                    Description:                                                                                                                                 Date Created:                                                    Security:                             "
         self.entry_page_label = "                                Entry:                                                                                                               Date Created:                                                                                    Date Last Modified:                                                                                            "
-        self.current_topic = ""
+        self.current_topic = {"name": "", "locked": False}
         self.current_entry = ""
         self.loading_heading = "                                                                                                                                                                                                                     Loading..."
         self.topic_container_list = []
@@ -99,11 +100,6 @@ class JBTMainWindow(QMainWindow):
         self.ui.dockWidget.setStyleSheet("background-color: #FFFFFF;")
         self.ui.menuGraphicsView.setFixedSize(1515, 180)
         # Set background color  FFF7E0
-#        linearGrad = QLinearGradient(QPointF(100, 100), QPointF(100, 180));
-#        linearGrad.setColorAt(0, QColor("#FFF8EA"))
-#        linearGrad.setColorAt(0.5, QColor("#FFF7E0"))
-#        linearGrad.setColorAt(1, QColor("#FFF8EA"))
-#        self.ui.menuGraphicsView.setBackgroundBrush(linearGrad)
         self.ui.menuGraphicsView.setStyleSheet("background-color: #FFF8EA;")
         self.menu_scene.setSceneRect(QRectF(0, 0, 1513, 178))
         self.ui.menuGraphicsView.setScene(self.menu_scene)
@@ -191,7 +187,7 @@ class JBTMainWindow(QMainWindow):
     # Slot to respond to new entry button being clicked
     @Slot()
     def newEntryButtonClicked(self):
-        if self.current_topic != "":
+        if self.current_topic["name"] != "":
             self.loadingTextEditAnimation()
         else:
             message = "Cannot create a new entry outside a topic.\n\nYou need to create a new topic or enter an existing topic in order to create a new entry..."
@@ -392,7 +388,8 @@ class JBTMainWindow(QMainWindow):
             self.resetPW_label.setDefaultTextColor(Qt.GlobalColor.darkGray)
             self.resetPW_label.setPos(480, 88)
 
-        self.current_topic = name
+        self.current_topic["name"] = name
+        self.current_topic["locked"] = locked
         if self.back_button == None:
             self.back_button = PixmapButton(QPixmap("Images/back-gray.png"), QPixmap("Images/back-lightgray.png"))
             self.back_button.setToolTip("Exit current topic")
@@ -522,9 +519,8 @@ class JBTMainWindow(QMainWindow):
     @Slot(dict)
     def resetPassword(self, newData):
         # Load the data in the .dat file
-        if self.current_topic != "":
-            #print(f"{self.topics_dir}/{self.current_topic}/{self.current_topic}.dat")
-            with open(f"{self.topics_dir}/{self.current_topic}/{self.current_topic}.dat", "rb") as file:
+        if self.current_topic["name"] != "":
+            with open(f"{self.topics_dir}/{self.current_topic['name']}/{self.current_topic['name']}.dat", "rb") as file:
                 data_dic = pickle.load(file)
 
             # Update the password and hint
@@ -539,7 +535,7 @@ class JBTMainWindow(QMainWindow):
             data_dic["pfk"] = key
 
             # Save the data in the .dat file
-            with open(f"{self.topics_dir}/{self.current_topic}/{self.current_topic}.dat", "wb") as file:
+            with open(f"{self.topics_dir}/{self.current_topic['name']}/{self.current_topic['name']}.dat", "wb") as file:
                 pickle.dump(data_dic, file)
 
             message = MessageBox(self, "Success!", "The password has been successfully changed.");
@@ -613,7 +609,8 @@ class JBTMainWindow(QMainWindow):
         self.entry_container_list.clear()
 
         self.setupMainScene()
-        self.current_topic = ""
+        self.current_topic["name"] = ""
+        self.current_topic["locked"] = False
 
 
     # Slot to respond to a clicked entry button
@@ -684,7 +681,7 @@ class JBTMainWindow(QMainWindow):
     @Slot()
     def loadingStep(self):
         if self.progressBar.value() >= 100:
-            # Dislay the text edit
+            # Display the text edit
             self.loading_timer.stop()
             del self.loading_timer
 
@@ -695,16 +692,31 @@ class JBTMainWindow(QMainWindow):
                 self.menu_scene.removeItem(self.resetPW_label)
 
             # Open the file and get the data
-            if self.current_entry != "":
-                with open(f"{self.topics_dir}/{self.current_topic}/{self.current_entry}", "rb") as file:
-                    data_dic = pickle.load(file)
+            with open(f"{self.topics_dir}/{self.current_topic['name']}/{self.current_topic['name']}.dat", "rb") as file:
+                data_dic = pickle.load(file)
 
-                te_window = JBT_TextEditWindow(data_dic, f"{self.topics_dir}/{self.current_topic}", self)
-                te_window.closing.connect(self.reloadEntries)
-                self.main_scene.clear()
-                te_window.showFullScreen()
-            else:
-                te_window = JBT_TextEditWindow(None, f"{self.topics_dir}/{self.current_topic}", self)
+            # Get the entry data dic
+            if self.current_entry != "":
+                with open(f"{self.topics_dir}/{self.current_topic['name']}/{self.current_entry}", "rb") as file:
+                    entry_data_dic = pickle.load(file)
+
+                # Try except to catch invalid token error in the case that someone tries to open an entry in the wrong topic
+                try:
+                    # Decrypt the password
+                    f = Fernet(data_dic["pfk"])
+                    topic_unique_id = f.decrypt(data_dic["unique_id"])
+                    entry_unique_id = f.decrypt(entry_data_dic["encrypted_unique_id"])
+
+                    te_window = JBT_TextEditWindow(entry_data_dic, None, f"{self.topics_dir}/{self.current_topic['name']}", self)
+                    te_window.closing.connect(self.reloadEntries)
+                    self.main_scene.clear()
+                    te_window.showFullScreen()
+                except InvalidToken:
+                    self.current_entry = ""
+                    msg = MessageBox(self,"Security Violation", "Error: You are trying to open an entry in the wrong topic. Entries can only be opened in the topic that they were created.")
+                    msg.show()
+            else:                    
+                te_window = JBT_TextEditWindow(None, data_dic["unique_id"], f"{self.topics_dir}/{self.current_topic['name']}", self)
                 te_window.closing.connect(self.reloadEntries)
                 self.main_scene.clear()
                 te_window.showFullScreen()
@@ -719,7 +731,8 @@ class JBTMainWindow(QMainWindow):
         self.current_entry = ""
         self.ui.lineEdit.setText(self.entry_page_label)
         self.main_scene.setBackgroundBrush(QColor("#FFFFFF"))
-        self.displayTopicEntries(self.current_topic)
+
+        self.displayTopicEntries(self.current_topic["name"], self.current_topic["locked"])
 
 
     # Slot to update the time variable with the latest time every second
@@ -732,7 +745,7 @@ class JBTMainWindow(QMainWindow):
     # Slot to open topic dialog
     @Slot()
     def openTopicDialog(self):
-        if self.current_topic == "":
+        if self.current_topic["name"] == "":
             topic_dialog = NewTopicDialog(parent=self)
             topic_dialog.data_ready.connect(self.createNewTopic)
             topic_dialog.show()
@@ -754,11 +767,14 @@ class JBTMainWindow(QMainWindow):
             dir.cd(data_dict['topic_name'])
             data_dict["date_created"] = QDate.currentDate().toString("dddd - dd MMMM yyyy")
 
-            # Encrypt password and hint
+            # Encrypt password, hint and unique identifier
             key = Fernet.generate_key()
             f = Fernet(key)
             data_dict["password"] = f.encrypt(data_dict["password"])
             data_dict["passwordHint"] = f.encrypt(data_dict["passwordHint"].encode('utf-8'))
+
+            # Unique identifier for this topic so that the file can only be opened in the topic that it was created
+            data_dict["unique_id"] = f.encrypt(secrets.token_hex(10).encode('utf-8'))
             data_dict["pfk"] = key
 
             with open(f"{dir.path()}/{data_dict['topic_name']}.dat", "wb") as file:
@@ -849,7 +865,7 @@ class JBTMainWindow(QMainWindow):
         if choice == "Yes, Delete":
             # Remove the file
             dir = QDir(self.topics_dir)
-            dir.cd(self.current_topic)
+            dir.cd(self.current_topic["name"])
             result = dir.remove(self.del_entry)
             if result == True:
                 self.main_scene.clear()
